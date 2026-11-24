@@ -72,6 +72,8 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
   overflow-x: hidden;
 }
 
@@ -95,6 +97,7 @@ p {
 .app-container {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
 }
 
@@ -110,7 +113,7 @@ p {
 @media (max-width: 1024px) {
   .main-content {
     padding-left: 0;
-    padding-bottom: calc(var(--mobile-nav-height) + 16px);
+    padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 16px);
   }
 }
 
@@ -527,13 +530,18 @@ p {
    =================================================== */
 @media (max-width: 768px) {
   .topbar-container {
-    padding: 0 16px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
   .quote-pill {
     display: none !important;
   }
   .quick-action-label {
     display: none !important;
+  }
+  /* Evita zoom automático no iOS Safari ao focar campos de formulário */
+  .vt-input, .vt-select, .vt-textarea {
+    font-size: 16px;
   }
 }
 
@@ -601,10 +609,198 @@ p {
   .vt-toast-container {
     left: 12px;
     right: 12px;
-    bottom: calc(var(--mobile-nav-height) + 12px);
+    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 12px);
   }
   .vt-toast {
     min-width: unset;
     width: 100%;
+  }
+}
+
+/* ===================================================
+   PWA — BANNERS DE INSTALAÇÃO, ATUALIZAÇÃO E OFFLINE
+   =================================================== */
+.vt-pwa-offline-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px;
+  background-color: var(--color-text-main);
+  color: var(--color-text-white);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.vt-pwa-banner {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 440px;
+  padding: 14px 16px;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-primary-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s var(--transition-smooth);
+}
+
+.vt-pwa-banner-update {
+  border-left: 4px solid var(--color-primary);
+}
+
+.vt-pwa-banner-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-tint);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vt-pwa-banner-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vt-pwa-banner-text strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  line-height: 1.25;
+}
+
+.vt-pwa-banner-text span {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+
+.vt-pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.vt-pwa-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.vt-pwa-close-btn:hover {
+  background-color: var(--color-gray-lighter);
+  color: var(--color-text-main);
+}
+
+.vt-ios-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vt-ios-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-card-muted);
+  border: 1px solid var(--color-gray-border);
+}
+
+.vt-ios-step-num {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.vt-ios-steps strong {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--color-text-main);
+  margin-bottom: 2px;
+}
+
+.vt-ios-steps p {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+@media (max-width: 1024px) {
+  .vt-pwa-banner {
+    left: 12px;
+    right: 12px;
+    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 12px);
+    max-width: none;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .vt-pwa-banner {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .vt-pwa-banner-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ===================================================
+   PWA — MODO STANDALONE E SAFE AREAS ADICIONAIS
+   =================================================== */
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  input, textarea, select, [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+@media (max-width: 600px) {
+  .vt-modal-overlay {
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  .vt-btn {
+    min-height: 40px;
   }
 }

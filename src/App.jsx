@@ -6,6 +6,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
 import { TopBar } from './components/layout/TopBar';
+import { PWAManager } from './components/pwa/PWAManager';
 
 // Pages
 import { Dashboard } from './components/pages/Dashboard';
@@ -94,6 +95,7 @@ export default function App() {
   return (
     <ToastProvider>
       <AuthProvider>
+        <PWAManager />
         <AppContent />
       </AuthProvider>
     </ToastProvider>

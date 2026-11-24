@@ -30,14 +30,17 @@ export function TopBar({ onOpenQuickAction, onSelectTab }) {
   return (
     <header
       style={{
-        height: 'var(--topbar-height)',
-        backgroundColor: 'rgba(245, 241, 231, 0.85)',
+        minHeight: 'var(--topbar-height)',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        backgroundColor: 'rgba(245, 241, 231, 0.88)',
         backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         borderBottom: '1px solid var(--color-gray-border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 32px',
+        paddingLeft: '32px',
+        paddingRight: '32px',
         position: 'sticky',
         top: 0,
         zIndex: 40
