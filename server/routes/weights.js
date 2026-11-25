@@ -5,6 +5,20 @@ import { authenticateToken } from '../auth.js';
 
 const router = express.Router();
 
+async function syncInitialWeightFromEntries(userId) {
+  const firstRes = await db.execute({
+    sql: 'SELECT weight, date FROM weight_entries WHERE user_id = ? ORDER BY date ASC, time ASC, created_at ASC LIMIT 1',
+    args: [userId]
+  });
+  const first = firstRes.rows[0];
+  if (first) {
+    await db.execute({
+      sql: 'UPDATE user_settings SET initial_weight = ?, tracking_start_date = ? WHERE user_id = ?',
+      args: [Number(first.weight), first.date, userId]
+    });
+  }
+}
+
 // GET all weight entries and summary
 router.get('/', authenticateToken, async (req, res) => {
   const userId = req.user.id;
@@ -34,8 +48,21 @@ router.get('/', authenticateToken, async (req, res) => {
     });
   }
 
-  const initialWeight = settings?.initial_weight || allEntries[0].weight;
-  const currentWeight = allEntries[allEntries.length - 1].weight;
+  const firstEntry = allEntries[0];
+  const initialWeight = Number(firstEntry.weight);
+  const currentWeight = Number(allEntries[allEntries.length - 1].weight);
+
+  // Mantém user_settings sincronizado com a primeira pesagem cronológica
+  if (!settings || Number(settings.initial_weight) !== initialWeight || settings.tracking_start_date !== firstEntry.date) {
+    try {
+      await db.execute({
+        sql: 'UPDATE user_settings SET initial_weight = ?, tracking_start_date = ? WHERE user_id = ?',
+        args: [initialWeight, firstEntry.date, userId]
+      });
+    } catch (syncErr) {
+      console.error('Aviso ao sincronizar peso inicial:', syncErr);
+    }
+  }
   const totalDiff = currentWeight - initialWeight;
   const totalPercent = initialWeight > 0 ? (totalDiff / initialWeight) * 100 : 0;
 
@@ -107,15 +134,7 @@ router.post('/', authenticateToken, async (req, res) => {
       args: [id, userId, date, Number(numWeight.toFixed(2)), time || null, notes ? notes.trim() : null]
     });
 
-    const settingsRes = await db.execute({ sql: 'SELECT initial_weight FROM user_settings WHERE user_id = ?', args: [userId] });
-    const settings = settingsRes.rows[0];
-    
-    if (!settings || settings.initial_weight === null) {
-      await db.execute({
-        sql: 'UPDATE user_settings SET initial_weight = ?, tracking_start_date = ? WHERE user_id = ?',
-        args: [numWeight, date, userId]
-      });
-    }
+    await syncInitialWeightFromEntries(userId);
 
     const createdRes = await db.execute({ sql: 'SELECT * FROM weight_entries WHERE id = ?', args: [id] });
     return res.status(201).json({
@@ -146,6 +165,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       args: [date, Number(numWeight.toFixed(2)), time || null, notes ? notes.trim() : null, id, userId]
     });
 
+    await syncInitialWeightFromEntries(userId);
+
     const updatedRes = await db.execute({ sql: 'SELECT * FROM weight_entries WHERE id = ?', args: [id] });
     return res.json({ message: 'Pesagem atualizada com sucesso.', entry: updatedRes.rows[0] });
   } catch (err) {
@@ -163,6 +184,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
   try {
     await db.execute({ sql: 'DELETE FROM weight_entries WHERE id = ? AND user_id = ?', args: [id, userId] });
+    await syncInitialWeightFromEntries(userId);
     return res.json({ message: 'Pesagem excluída com sucesso.' });
   } catch (err) {
     return res.status(500).json({ error: 'Erro ao excluir pesagem.' });

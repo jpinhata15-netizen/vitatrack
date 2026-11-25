@@ -18,6 +18,7 @@ export function ProfilePage() {
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
+    initial_weight: settings?.initial_weight || '',
     protein_goal: settings?.protein_goal || 150,
     weight_unit: settings?.weight_unit || 'kg',
     measurement_unit: settings?.measurement_unit || 'cm',
@@ -229,6 +230,19 @@ export function ProfilePage() {
                 <div className="vt-form-group" style={{ marginBottom: 0 }}>
                   <label className="vt-label">E-mail</label>
                   <input type="email" className="vt-input" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} />
+                </div>
+                <div className="vt-form-group" style={{ marginBottom: 0 }}>
+                  <label className="vt-label">Peso inicial ({profileForm.weight_unit})</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="20"
+                    max="400"
+                    className="vt-input"
+                    value={profileForm.initial_weight}
+                    onChange={e => setProfileForm({ ...profileForm, initial_weight: e.target.value })}
+                    placeholder="Ex: 156.5"
+                  />
                 </div>
                 <div className="vt-form-group" style={{ marginBottom: 0 }}>
                   <label className="vt-label">Meta de proteína (g/dia)</label>

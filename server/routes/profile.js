@@ -7,7 +7,7 @@ const router = express.Router();
 // Update profile details and wellness settings
 router.put('/', authenticateToken, async (req, res) => {
   const userId = req.user.id;
-  const { name, email, protein_goal, weight_unit, measurement_unit, personal_goal } = req.body;
+  const { name, email, protein_goal, weight_unit, measurement_unit, personal_goal, initial_weight } = req.body;
 
   if (!name || !name.trim()) return res.status(400).json({ error: 'O nome é obrigatório.' });
   if (!email || !email.includes('@')) return res.status(400).json({ error: 'E-mail inválido.' });
@@ -21,10 +21,34 @@ router.put('/', authenticateToken, async (req, res) => {
     await db.execute({ sql: 'UPDATE users SET name = ?, email = ? WHERE id = ?', args: [name.trim(), email.trim().toLowerCase(), userId] });
 
     const protGoal = parseFloat(protein_goal) || 150;
-    await db.execute({
-      sql: 'UPDATE user_settings SET protein_goal = ?, weight_unit = ?, measurement_unit = ?, personal_goal = ? WHERE user_id = ?',
-      args: [protGoal, weight_unit || 'kg', measurement_unit || 'cm', personal_goal || null, userId]
-    });
+    const parsedInitialWeight = initial_weight !== undefined && initial_weight !== null && initial_weight !== ''
+      ? parseFloat(initial_weight)
+      : null;
+
+    if (parsedInitialWeight && !isNaN(parsedInitialWeight) && parsedInitialWeight > 0) {
+      const cleanWeight = Number(parsedInitialWeight.toFixed(2));
+      await db.execute({
+        sql: 'UPDATE user_settings SET protein_goal = ?, weight_unit = ?, measurement_unit = ?, personal_goal = ?, initial_weight = ? WHERE user_id = ?',
+        args: [protGoal, weight_unit || 'kg', measurement_unit || 'cm', personal_goal || null, cleanWeight, userId]
+      });
+
+      // Atualiza também a primeira pesagem cronológica para manter toda a evolução coerente
+      const firstWeightRes = await db.execute({
+        sql: 'SELECT id FROM weight_entries WHERE user_id = ? ORDER BY date ASC, time ASC, created_at ASC LIMIT 1',
+        args: [userId]
+      });
+      if (firstWeightRes.rows[0]) {
+        await db.execute({
+          sql: 'UPDATE weight_entries SET weight = ? WHERE id = ? AND user_id = ?',
+          args: [cleanWeight, firstWeightRes.rows[0].id, userId]
+        });
+      }
+    } else {
+      await db.execute({
+        sql: 'UPDATE user_settings SET protein_goal = ?, weight_unit = ?, measurement_unit = ?, personal_goal = ? WHERE user_id = ?',
+        args: [protGoal, weight_unit || 'kg', measurement_unit || 'cm', personal_goal || null, userId]
+      });
+    }
 
     const updatedUserRes = await db.execute({ sql: 'SELECT id, name, email, avatar_url FROM users WHERE id = ?', args: [userId] });
     const updatedSettingsRes = await db.execute({ sql: 'SELECT * FROM user_settings WHERE user_id = ?', args: [userId] });
