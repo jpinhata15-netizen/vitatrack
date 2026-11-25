@@ -3,6 +3,7 @@ import { User, Lock, Download, Trash2, Save, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { WaterReminderPanel } from '../pwa/WaterReminderPanel';
 
 export function ProfilePage() {
   const { user, settings, token, updateUser, updateSettings, logout } = useAuth();
@@ -290,6 +291,11 @@ export function ProfilePage() {
 
           {tab === 'settings' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Lembrete de Água (Web Push) */}
+              <div className="vt-card">
+                <WaterReminderPanel />
+              </div>
+
               {/* Export */}
               <div className="vt-card">
                 <h3 style={{ fontWeight: 600, marginBottom: '14px' }}>Exportar meus dados</h3>

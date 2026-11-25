@@ -148,6 +148,26 @@ export async function initDatabase() {
       amount_ml INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      endpoint TEXT NOT NULL UNIQUE,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS water_reminder_settings (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      enabled INTEGER DEFAULT 0,
+      interval_minutes INTEGER DEFAULT 120,
+      start_time TEXT DEFAULT '08:00',
+      end_time TEXT DEFAULT '21:00',
+      timezone_offset INTEGER DEFAULT -180,
+      last_sent_at INTEGER DEFAULT 0,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   try {

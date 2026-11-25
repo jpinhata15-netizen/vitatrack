@@ -10,6 +10,7 @@ export default defineConfig({
       injectRegister: false,
       manifest: false,
       workbox: {
+        importScripts: ['/push-sw.js'],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,webmanifest}'],
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',

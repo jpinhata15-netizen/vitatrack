@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Scale, Ruler, Target, TrendingUp, Plus, Activity, Lightbulb, ChevronRight, Droplets } from 'lucide-react';
+import { Scale, Ruler, Target, TrendingUp, Plus, Activity, Lightbulb, ChevronRight, Droplets, Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { WeightChart } from '../charts/WeightChart';
+import { Modal } from '../ui/Modal';
+import { WaterReminderPanel } from '../pwa/WaterReminderPanel';
 
 const formatDate = (d) => {
   if (!d) return '--';
@@ -20,6 +22,7 @@ export function Dashboard({ onSelectTab }) {
   const [measData, setMeasData] = useState(null);
   const [proteinData, setProteinData] = useState(null);
   const [waterData, setWaterData] = useState(null);
+  const [showWaterReminderModal, setShowWaterReminderModal] = useState(false);
   const [chartPeriod, setChartPeriod] = useState('all');
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -245,7 +248,29 @@ export function Dashboard({ onSelectTab }) {
             <div className="stat-card" style={{ gridColumn: 'span 1' }}>
               <div className="stat-header">
                 <span>Água hoje</span>
-                <Droplets size={17} color="#3b82f6" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowWaterReminderModal(true)}
+                    title="Configurar lembrete de água no celular"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '3px 8px',
+                      borderRadius: 'var(--radius-full)',
+                      border: '1px solid var(--color-primary-light)',
+                      backgroundColor: 'var(--color-primary-tint)',
+                      color: 'var(--color-primary)',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Bell size={12} /> Lembrete
+                  </button>
+                  <Droplets size={17} color="#3b82f6" />
+                </div>
               </div>
               <div className="stat-value">
                 {waterData ? formatNum(waterData.total_ml, 0) : '0'}
@@ -284,6 +309,15 @@ export function Dashboard({ onSelectTab }) {
                 </div>
               )}
             </div>
+
+            <Modal
+              isOpen={showWaterReminderModal}
+              onClose={() => setShowWaterReminderModal(false)}
+              title="Lembrete de Água no Celular"
+              maxWidth="480px"
+            >
+              <WaterReminderPanel compact />
+            </Modal>
 
             {/* Evolução */}
             <div className="stat-card" onClick={() => onSelectTab('evolution')} style={{ cursor: 'pointer' }}>

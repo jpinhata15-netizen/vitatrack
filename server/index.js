@@ -17,6 +17,7 @@ import historyRoutes from './routes/history.js';
 import photosRoutes from './routes/photos.js';
 import profileRoutes from './routes/profile.js';
 import waterRoutes from './routes/water.js';
+import notificationsRoutes from './routes/notifications.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +45,7 @@ app.use('/api/history', historyRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/water', waterRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
