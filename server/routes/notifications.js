@@ -255,7 +255,7 @@ async function handleDispatch(req, res) {
 
   try {
     const usersRes = await db.execute({
-      sql: `SELECT wrs.*, us.water_goal, u.name
+      sql: `SELECT wrs.*, us.water_goal, us.initial_weight, u.name
             FROM water_reminder_settings wrs
             JOIN users u ON u.id = wrs.user_id
             LEFT JOIN user_settings us ON us.user_id = wrs.user_id
@@ -280,13 +280,28 @@ async function handleDispatch(req, res) {
         continue;
       }
 
-      // Check if daily water goal is already reached
-      const waterRes = await db.execute({
-        sql: 'SELECT COALESCE(SUM(amount_ml), 0) as total FROM water_entries WHERE user_id = ? AND date = ?',
-        args: [row.user_id, dateStr]
-      });
+      // Check if daily water goal is already reached (35 ml/kg based on latest weight)
+      const [waterRes, latestWeightRes] = await Promise.all([
+        db.execute({
+          sql: 'SELECT COALESCE(SUM(amount_ml), 0) as total FROM water_entries WHERE user_id = ? AND date = ?',
+          args: [row.user_id, dateStr]
+        }),
+        db.execute({
+          sql: 'SELECT weight FROM weight_entries WHERE user_id = ? ORDER BY date DESC, time DESC, created_at DESC LIMIT 1',
+          args: [row.user_id]
+        })
+      ]);
       const totalToday = Number(waterRes.rows[0]?.total || 0);
-      const goal = Number(row.water_goal) || 2500;
+      const currentWeight =
+        latestWeightRes.rows[0]?.weight != null
+          ? Number(latestWeightRes.rows[0].weight)
+          : row.initial_weight != null
+            ? Number(row.initial_weight)
+            : null;
+      const goal =
+        currentWeight && currentWeight > 0
+          ? Math.round(currentWeight * 35)
+          : Number(row.water_goal) || 2500;
 
       if (totalToday >= goal) {
         continue;

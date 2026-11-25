@@ -303,8 +303,11 @@ export function Dashboard({ onSelectTab }) {
                       transition: 'width 0.7s ease'
                     }} />
                   </div>
-                  <div className="stat-footer" style={{ marginTop: '4px' }}>
+                  <div className="stat-footer" style={{ marginTop: '4px', justifyContent: 'space-between' }}>
                     <span>{Math.round((waterData.total_ml / (waterData.goal || 2500)) * 100)}% da meta</span>
+                    {waterData.current_weight && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>35 ml/kg</span>
+                    )}
                   </div>
                 </div>
               )}

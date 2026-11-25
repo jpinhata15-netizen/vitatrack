@@ -17,14 +17,29 @@ router.get('/', authenticateToken, async (req, res) => {
     });
     
     const settingsRes = await db.execute({
-      sql: 'SELECT water_goal FROM user_settings WHERE user_id = ?',
+      sql: 'SELECT water_goal, initial_weight FROM user_settings WHERE user_id = ?',
       args: [userId]
     });
-    
-    const total_ml = entriesRes.rows.reduce((sum, e) => sum + e.amount_ml, 0);
-    const goal = settingsRes.rows[0]?.water_goal || 2500;
 
-    return res.json({ date, total_ml, goal, entries: entriesRes.rows });
+    const latestWeightRes = await db.execute({
+      sql: 'SELECT weight FROM weight_entries WHERE user_id = ? ORDER BY date DESC, time DESC, created_at DESC LIMIT 1',
+      args: [userId]
+    });
+
+    const currentWeight =
+      latestWeightRes.rows[0]?.weight != null
+        ? Number(latestWeightRes.rows[0].weight)
+        : settingsRes.rows[0]?.initial_weight != null
+          ? Number(settingsRes.rows[0].initial_weight)
+          : null;
+
+    const total_ml = entriesRes.rows.reduce((sum, e) => sum + e.amount_ml, 0);
+    const goal =
+      currentWeight && currentWeight > 0
+        ? Math.round(currentWeight * 35)
+        : settingsRes.rows[0]?.water_goal || 2500;
+
+    return res.json({ date, total_ml, goal, current_weight: currentWeight, entries: entriesRes.rows });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro ao buscar dados de hidratação.' });
